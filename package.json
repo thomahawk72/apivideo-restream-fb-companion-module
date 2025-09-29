@@ -1,1 +1,37 @@
-{"name":"Facebook & api.video Integration","version":"1.0.0","license":"MIT","type":"commonjs","dependencies":{}}
+{
+  "name": "companion-module-facebook-apivideo",
+  "version": "1.0.0",
+  "description": "Bitfocus Companion module for Facebook Live and api.video integration",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "companion",
+    "facebook",
+    "live",
+    "streaming",
+    "api.video",
+    "restream"
+  ],
+  "author": "Manus AI",
+  "license": "MIT",
+  "dependencies": {
+    "@companion-module/base": "^1.0.0",
+    "got": "^11.8.6"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitfocus/companion-module-facebook-apivideo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bitfocus/companion-module-facebook-apivideo/issues"
+  },
+  "homepage": "https://github.com/bitfocus/companion-module-facebook-apivideo#readme",
+  "devDependencies": {
+    "@companion-module/tools": "^2.4.0"
+  }
+}
