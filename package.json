@@ -4,7 +4,11 @@
   "description": "Bitfocus Companion module for Facebook Live and api.video integration",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-tokens": "node test-token-flow.js",
+    "test-api": "node test-token-flow.js",
+    "test-updated": "node test-updated-implementation.js",
+    "test-renewal": "node test-token-renewal.js"
   },
   "keywords": [
     "companion",

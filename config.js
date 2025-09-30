@@ -28,6 +28,22 @@ module.exports = function (self) {
 		},
 		{
 			type: 'textinput',
+			id: 'fb_app_id',
+			label: 'Facebook App ID',
+			width: 6,
+			required: false,
+			tooltip: 'Your Facebook App ID (optional, for token extension)',
+		},
+		{
+			type: 'textinput',
+			id: 'fb_app_secret',
+			label: 'Facebook App Secret',
+			width: 6,
+			required: false,
+			tooltip: 'Your Facebook App Secret (optional, for token extension)',
+		},
+		{
+			type: 'textinput',
 			id: 'apivideo_api_key',
 			label: 'api.video API Key',
 			width: 12,

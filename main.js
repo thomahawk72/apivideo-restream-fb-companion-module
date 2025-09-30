@@ -193,13 +193,15 @@ class FacebookApiVideoInstance extends InstanceBase {
 				throw new Error('No api.video live stream selected')
 			}
 
-			// Step 1: Create Facebook Live Video
-			this.log('info', 'Creating Facebook Live Video...')
+			// Step 1: Create Facebook Live Video (with automatic token validation and renewal)
+			this.log('info', 'Creating Facebook Live Video with automatic token management...')
 			const fbLiveVideo = await this.api.createFacebookLiveVideo(
 				this.config.fb_user_token,
 				this.config.fb_page_id,
 				title,
-				description
+				description,
+				this.config.fb_app_id,
+				this.config.fb_app_secret
 			)
 
 			this.lastFacebookVideoId = fbLiveVideo.id
