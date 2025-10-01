@@ -1,18 +1,17 @@
 {
   "name": "companion-module-facebook-apivideo",
   "version": "1.0.0",
-  "description": "Bitfocus Companion module for Facebook Live and api.video integration",
+  "description": "Bitfocus Companion module for Facebook Live, Youtube Live and api.video integration",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-tokens": "node test-token-flow.js",
-    "test-api": "node test-token-flow.js",
-    "test-updated": "node test-updated-implementation.js",
-    "test-renewal": "node test-token-renewal.js"
+    "build": "companion-module-build"
   },
+  "type": "commonjs",
   "keywords": [
     "companion",
     "facebook",
+    "youtube",
     "live",
     "streaming",
     "api.video",

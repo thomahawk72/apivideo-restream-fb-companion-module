@@ -16,14 +16,14 @@ module.exports = function (self) {
 			description: 'ID of the last created Facebook Live Video',
 		},
 		{
-			name: 'Selected Live Stream',
-			variableId: 'selected_livestream',
-			description: 'Name of the currently selected api.video live stream',
+			name: 'Youtube Video ID',
+			variableId: 'youtube_video_id',
+			description: 'ID of the last created Youtube Live Video (if applicable)',
 		},
 		{
-			name: 'Live Streams Count',
-			variableId: 'livestreams_count',
-			description: 'Number of available api.video live streams',
+			name: 'Live Stream ID',
+			variableId: 'livestream_id',
+			description: 'ID of the last created api.video live stream',
 		},
 		{
 			name: 'Module Ready',

@@ -13,24 +13,22 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.api = new ApiClient((level, message) => this.log(level, message))
 		
 		// Initialize state
-		this.liveStreams = []
 		this.feedbackState = 'idle' // idle, in_progress, ok, fail
 		this.lastError = ''
 		this.lastFacebookVideoId = ''
+		this.lastYoutubeVideoId = ''
+		this.lastLiveStreamId = ''
 	}
 
 	async init(config) {
 		this.config = config
-		this.log('info', 'Initializing Facebook & api.video module')
+		this.log('info', 'Initializing Facebook & Youtube api.video restream module')
 
 		// Validate configuration
 		if (!this.validateConfig(config)) {
 			this.updateStatus(InstanceStatus.BadConfig, 'Missing required configuration')
 			return
 		}
-
-		// Load live streams from api.video
-		await this.loadLiveStreams()
 
 		// Initialize actions, feedbacks, and variables
 		this.updateActions()
@@ -56,9 +54,6 @@ class FacebookApiVideoInstance extends InstanceBase {
 			return
 		}
 
-		// Reload live streams if api.video key changed
-		await this.loadLiveStreams()
-
 		// Update actions and feedbacks with new config
 		this.updateActions()
 		this.updateFeedbacks()
@@ -71,48 +66,44 @@ class FacebookApiVideoInstance extends InstanceBase {
 	 * Validate that all required configuration fields are present
 	 */
 	validateConfig(config) {
-		const required = ['fb_page_id', 'fb_user_token', 'apivideo_api_key']
-		
-		for (const field of required) {
-			if (!config[field] || config[field].trim() === '') {
-				this.log('warn', `Missing required configuration field: ${field}`)
-				return false
+		// api.video API key is always required
+		if (!config.apivideo_api_key || config.apivideo_api_key.trim() === '') {
+			this.log('warn', 'Missing required configuration field: apivideo_api_key')
+			return false
+		}
+
+		// Check if at least one restream destination is enabled
+		const fbEnabled = config.enable_facebook_restream
+		const ytEnabled = config.enable_youtube_restream
+
+		if (!fbEnabled && !ytEnabled) {
+			this.log('warn', 'At least one restream destination must be enabled')
+			return false
+		}
+
+		// Validate Facebook configuration if enabled
+		if (fbEnabled) {
+			const fbRequired = ['fb_page_id', 'fb_user_token']
+			for (const field of fbRequired) {
+				if (!config[field] || config[field].trim() === '') {
+					this.log('warn', `Missing required Facebook configuration field: ${field}`)
+					return false
+				}
+			}
+		}
+
+		// Validate Youtube configuration if enabled
+		if (ytEnabled) {
+			const ytRequired = ['yt_rtmp_url', 'yt_stream_key']
+			for (const field of ytRequired) {
+				if (!config[field] || config[field].trim() === '') {
+					this.log('warn', `Missing required Youtube configuration field: ${field}`)
+					return false
+				}
 			}
 		}
 
 		return true
-	}
-
-	/**
-	 * Load live streams from api.video and update configuration choices
-	 */
-	async loadLiveStreams() {
-		if (!this.config.apivideo_api_key) {
-			this.liveStreams = [{ id: '', label: 'No API key configured' }]
-			return
-		}
-
-		try {
-			this.log('info', 'Loading live streams from api.video...')
-			const streams = await this.api.getApiVideoLiveStreams(this.config.apivideo_api_key)
-			
-			if (streams.length === 0) {
-				this.liveStreams = [{ id: '', label: 'No live streams found' }]
-				this.log('warn', 'No live streams found in api.video account')
-			} else {
-				this.liveStreams = streams.map(stream => ({
-					id: stream.id,
-					label: stream.label,
-				}))
-				this.log('info', `Loaded ${streams.length} live streams from api.video`)
-			}
-		} catch (error) {
-			this.liveStreams = [{ id: '', label: 'Error loading streams - check API key' }]
-			this.log('error', `Failed to load live streams: ${error.message}`)
-		}
-
-		// Update configuration to refresh dropdown choices
-		this.configUpdated(this.config)
 	}
 
 	/**
@@ -163,19 +154,14 @@ class FacebookApiVideoInstance extends InstanceBase {
 	 * Update all variable values
 	 */
 	updateVariableValues() {
-		const selectedStream = this.liveStreams.find(s => s.id === this.config.apivideo_livestream_id)
-		const isReady = this.config && 
-			this.config.fb_page_id && 
-			this.config.fb_user_token && 
-			this.config.apivideo_api_key && 
-			this.config.apivideo_livestream_id
+		const isReady = this.validateConfig(this.config)
 
 		this.setVariableValues({
 			status: this.feedbackState,
 			last_error: this.lastError,
 			facebook_video_id: this.lastFacebookVideoId,
-			selected_livestream: selectedStream ? selectedStream.label : 'None',
-			livestreams_count: this.liveStreams.length.toString(),
+			youtube_video_id: this.lastYoutubeVideoId,
+			livestream_id: this.lastLiveStreamId,
 			module_ready: isReady ? 'true' : 'false',
 		})
 	}
@@ -183,44 +169,69 @@ class FacebookApiVideoInstance extends InstanceBase {
 	/**
 	 * Execute the prepare live action
 	 */
-	async executePrepareLife(title = 'Live Stream via api.video', description = 'Automated live stream setup') {
-		this.log('info', 'Starting Facebook restream preparation...')
+	async executePrepareLife(title = 'Live Stream', description = 'Automated live stream setup') {
+		this.log('info', 'Starting restream preparation...')
 		this.setFeedbackState('in_progress')
 
 		try {
-			// Validate that a live stream is selected
-			if (!this.config.apivideo_livestream_id) {
-				throw new Error('No api.video live stream selected')
+			const restreams = []
+
+			// Step 1: Prepare Facebook restream if enabled
+			if (this.config.enable_facebook_restream) {
+				this.log('info', 'Creating Facebook Live Video with automatic token management...')
+				const fbLiveVideo = await this.api.createFacebookLiveVideo(
+					this.config.fb_user_token,
+					this.config.fb_page_id,
+					title,
+					description,
+					this.config.fb_app_id,
+					this.config.fb_app_secret
+				)
+
+				this.lastFacebookVideoId = fbLiveVideo.id
+				this.log('info', `Facebook Live Video created: ${fbLiveVideo.id}`)
+
+				restreams.push({
+					name: 'Facebook Live',
+					serverUrl: fbLiveVideo.serverUrl,
+					streamKey: fbLiveVideo.streamKey,
+				})
 			}
 
-			// Step 1: Create Facebook Live Video (with automatic token validation and renewal)
-			this.log('info', 'Creating Facebook Live Video with automatic token management...')
-			const fbLiveVideo = await this.api.createFacebookLiveVideo(
-				this.config.fb_user_token,
-				this.config.fb_page_id,
-				title,
-				description,
-				this.config.fb_app_id,
-				this.config.fb_app_secret
-			)
+			// Step 2: Prepare Youtube restream if enabled
+			if (this.config.enable_youtube_restream) {
+				this.log('info', 'Adding Youtube restream destination...')
+				
+				restreams.push({
+					name: 'Youtube Live',
+					serverUrl: this.config.yt_rtmp_url,
+					streamKey: this.config.yt_stream_key,
+				})
 
-			this.lastFacebookVideoId = fbLiveVideo.id
-			this.log('info', `Facebook Live Video created: ${fbLiveVideo.id}`)
+				this.log('info', 'Youtube restream destination added')
+			}
 
-			// Step 2: Update api.video restream
-			this.log('info', 'Updating api.video restream destination...')
-			await this.api.updateApiVideoRestream(
+			// Step 3: Create new api.video live stream with restreams
+			const streamName = this.api.generateStreamName()
+			this.log('info', `Creating new api.video live stream: ${streamName}`)
+			
+			const liveStream = await this.api.createApiVideoLiveStream(
 				this.config.apivideo_api_key,
-				this.config.apivideo_livestream_id,
-				fbLiveVideo.serverUrl,
-				fbLiveVideo.streamKey
+				streamName,
+				restreams
 			)
 
-			this.log('info', 'Facebook restream preparation completed successfully')
+			this.lastLiveStreamId = liveStream.id
+			this.log('info', `Live stream created successfully: ${liveStream.id}`)
+			this.log('info', `RTMP URL: ${liveStream.rtmpUrl}`)
+			this.log('info', `Stream Key: ${liveStream.streamKey}`)
+
+			const destNames = restreams.map(r => r.name).join(', ')
+			this.log('info', `Restream preparation completed successfully. Destinations: ${destNames}`)
 			this.setFeedbackState('ok')
 
 		} catch (error) {
-			this.log('error', `Facebook restream preparation failed: ${error.message}`)
+			this.log('error', `Restream preparation failed: ${error.message}`)
 			this.setFeedbackState('fail', error.message)
 		}
 	}

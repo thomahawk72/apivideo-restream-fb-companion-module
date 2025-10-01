@@ -1,18 +1,28 @@
-# Facebook & api.video Integration
+# Facebook, Youtube & api.video Integration
 
-This module automates the process of setting up a Facebook Live restream for a selected api.video live stream.
+This module automates the process of setting up live restreams to Facebook and/or Youtube using api.video. It creates a new live stream with each execution.
 
 ## Configuration
 
+### Required
+- **api.video API Key**: Your api.video API key.
+
+### Restream Destinations
+- **Enable Facebook Restream**: Enable restreaming to Facebook Live.
+- **Enable Youtube Restream**: Enable restreaming to Youtube Live.
+
+### Facebook (required if enabled)
 - **Facebook Page ID**: Your Facebook Page's numeric ID.
 - **Facebook User Access Token**: A User Access Token with `publish_video` permission.
-- **api.video API Key**: Your api.video API key.
-- **api.video Live Stream**: Select the target live stream from the dropdown.
+- **Facebook App ID/Secret** (optional): For automatic token extension.
+
+### Youtube (required if enabled)
+- **Youtube RTMP URL**: Your Youtube Live RTMP server URL.
+- **Youtube Stream Key**: Your Youtube Live stream key.
 
 ## Actions
 
-- **Prepare Facebook Restream**: Creates a new Facebook Live video and adds it as a restream destination to the selected api.video live stream.
-- **Refresh Live Streams**: Reloads the list of available live streams from api.video.
+- **Prepare Live Stream**: Creates a new api.video live stream (named "Live - dd.mmmm.yy") and adds Facebook/Youtube restream destinations based on enabled options.
 - **Reset Status**: Resets the module's status.
 
 ## Feedbacks
@@ -21,6 +31,5 @@ This module automates the process of setting up a Facebook Live restream for a s
 - **Has Error**: Indicates if the last operation failed.
 - **Ready for Operation**: Indicates if the module is configured and ready.
 - **Operation in Progress**: Indicates if the prepare action is currently running.
-- **Live Stream Selected**: Indicates if a live stream is selected in the configuration.
 
 For more detailed information, please see the [README.md](https://github.com/bitfocus/companion-module-facebook-apivideo/blob/main/README.md) file.

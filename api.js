@@ -12,90 +12,72 @@ class ApiClient {
 	}
 
 	/**
-	 * Fetch all live streams from api.video
-	 * @param {string} apiKey - api.video API key
-	 * @returns {Promise<Array>} Array of live stream objects
+	 * Generate formatted stream name with current date
+	 * Format: "Live - dd.mmmm.yy" (e.g., "Live - 01.oktober.25")
+	 * @returns {string} Formatted stream name
 	 */
-	async getApiVideoLiveStreams(apiKey) {
-		try {
-			const response = await got('https://ws.api.video/live-streams', {
-				headers: {
-					'Authorization': `Bearer ${apiKey}`,
-					'Content-Type': 'application/json',
-				},
-				responseType: 'json',
-				timeout: 10000,
-			})
-
-			if (response.body && response.body.data) {
-				return response.body.data.map(stream => ({
-					id: stream.liveStreamId,
-					label: stream.name || `Live Stream ${stream.liveStreamId}`,
-					name: stream.name,
-					streamKey: stream.streamKey,
-					rtmpUrl: stream.rtmpUrl,
-				}))
-			}
-
-			return []
-		} catch (error) {
-			this.log('error', `Failed to fetch api.video live streams: ${error.message}`)
-			throw new Error(`api.video API error: ${error.message}`)
-		}
+	generateStreamName() {
+		const now = new Date()
+		const day = String(now.getDate()).padStart(2, '0')
+		const year = String(now.getFullYear()).slice(-2)
+		
+		// Norwegian month names
+		const monthNames = [
+			'januar', 'februar', 'mars', 'april', 'mai', 'juni',
+			'juli', 'august', 'september', 'oktober', 'november', 'desember'
+		]
+		const month = monthNames[now.getMonth()]
+		
+		return `Live - ${day}.${month}.${year}`
 	}
 
 	/**
-	 * Update api.video live stream with Facebook restream destination
+	 * Create a new api.video live stream
 	 * @param {string} apiKey - api.video API key
-	 * @param {string} liveStreamId - api.video live stream ID
-	 * @param {string} fbServerUrl - Facebook RTMP server URL
-	 * @param {string} fbStreamKey - Facebook stream key
-	 * @returns {Promise<Object>} Updated live stream object
+	 * @param {string} name - Name for the live stream
+	 * @param {Array} restreams - Array of restream destinations (optional)
+	 * @returns {Promise<Object>} Created live stream object
 	 */
-	async updateApiVideoRestream(apiKey, liveStreamId, fbServerUrl, fbStreamKey) {
+	async createApiVideoLiveStream(apiKey, name, restreams = []) {
 		try {
-			// First, get current restreams to avoid overwriting existing ones
-			const currentResponse = await got(`https://ws.api.video/live-streams/${liveStreamId}`, {
+			const payload = {
+				name: name,
+				record: true,
+			}
+
+			// Add restreams if provided
+			if (restreams.length > 0) {
+				payload.restreams = restreams
+			}
+
+			const response = await got.post('https://ws.api.video/live-streams', {
 				headers: {
 					'Authorization': `Bearer ${apiKey}`,
 					'Content-Type': 'application/json',
 				},
+				json: payload,
 				responseType: 'json',
 				timeout: 10000,
 			})
 
-			const currentRestreams = currentResponse.body.restreams || []
-			
-			// Add Facebook restream (remove existing Facebook restreams first)
-			const filteredRestreams = currentRestreams.filter(r => !r.name?.toLowerCase().includes('facebook'))
-			const updatedRestreams = [
-				...filteredRestreams,
-				{
-					name: 'Facebook Live',
-					serverUrl: fbServerUrl,
-					streamKey: fbStreamKey,
+			if (response.body && response.body.liveStreamId) {
+				this.log('info', `Successfully created api.video live stream: ${response.body.liveStreamId} (${name})`)
+				return {
+					id: response.body.liveStreamId,
+					name: response.body.name,
+					streamKey: response.body.streamKey,
+					rtmpUrl: response.body.rtmpUrl,
+					restreams: response.body.restreams || [],
 				}
-			]
-
-			const response = await got.patch(`https://ws.api.video/live-streams/${liveStreamId}`, {
-				headers: {
-					'Authorization': `Bearer ${apiKey}`,
-					'Content-Type': 'application/json',
-				},
-				json: {
-					restreams: updatedRestreams,
-				},
-				responseType: 'json',
-				timeout: 10000,
-			})
-
-			this.log('info', `Successfully updated api.video live stream ${liveStreamId} with Facebook restream`)
-			return response.body
+			} else {
+				throw new Error('api.video API did not return live stream ID')
+			}
 		} catch (error) {
-			this.log('error', `Failed to update api.video restream: ${error.message}`)
-			throw new Error(`api.video restream update error: ${error.message}`)
+			this.log('error', `Failed to create api.video live stream: ${error.message}`)
+			throw new Error(`api.video live stream creation error: ${error.message}`)
 		}
 	}
+
 
 	/**
 	 * Validate if a token is still valid by making a test API call

@@ -53,13 +53,10 @@ module.exports = function (self) {
 			},
 			options: [],
 			callback: () => {
-				// Check if all required config is present and a live stream is selected
+				// Check if all required config is present based on enabled destinations
 				return (
 					self.config &&
-					self.config.fb_page_id &&
-					self.config.fb_user_token &&
-					self.config.apivideo_api_key &&
-					self.config.apivideo_livestream_id &&
+					self.validateConfig(self.config) &&
 					self.feedbackState !== 'in_progress'
 				)
 			},
@@ -76,20 +73,6 @@ module.exports = function (self) {
 			options: [],
 			callback: () => {
 				return self.feedbackState === 'in_progress'
-			},
-		},
-
-		live_stream_selected: {
-			type: 'boolean',
-			name: 'Live Stream Selected',
-			description: 'Indicates if an api.video live stream is selected in configuration',
-			defaultStyle: {
-				bgcolor: combineRgb(0, 100, 255),
-				color: combineRgb(255, 255, 255),
-			},
-			options: [],
-			callback: () => {
-				return self.config && self.config.apivideo_livestream_id && self.config.apivideo_livestream_id !== ''
 			},
 		},
 	}

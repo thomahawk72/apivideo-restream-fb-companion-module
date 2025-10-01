@@ -73,6 +73,9 @@ web_modules/
 # config-file
 test-config.js
 
+# Build output
+pkg/
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
