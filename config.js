@@ -36,7 +36,7 @@ module.exports = function (self) {
 			id: 'enable_facebook_restream',
 			label: 'Enable Facebook Restream',
 			width: 6,
-			default: true,
+			default: false,
 			tooltip: 'Enable restreaming to Facebook Live',
 		},
 		{
