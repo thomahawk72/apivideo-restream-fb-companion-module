@@ -66,15 +66,31 @@ class FacebookApiVideoInstance extends InstanceBase {
 
 	/**
 	 * Validate that all required configuration fields are present
+	 * This is called during initialization - be lenient for empty configs
 	 */
 	validateConfig(config) {
-		// api.video API key is always required
+		// If no config at all, that's OK during initial setup
+		if (!config) {
+			return true
+		}
+
+		// If config exists but no api key, that's also OK during initial setup
+		// The api key will be required when actually using the module
 		if (!config.apivideo_api_key || config.apivideo_api_key.trim() === '') {
-			this.log('warn', 'Missing required configuration field: apivideo_api_key')
-			return false
+			this.log('debug', 'api.video API key not configured yet - module ready for configuration')
+			return true
 		}
 
 		return true
+	}
+
+	/**
+	 * Validate that the module is ready for actual use (has API key)
+	 */
+	isReadyForUse() {
+		return this.config && 
+			this.config.apivideo_api_key && 
+			this.config.apivideo_api_key.trim() !== ''
 	}
 
 	/**
@@ -168,7 +184,7 @@ class FacebookApiVideoInstance extends InstanceBase {
 	 * Update all variable values
 	 */
 	updateVariableValues() {
-		const isReady = this.validateConfig(this.config)
+		const isReady = this.isReadyForUse()
 
 		this.setVariableValues({
 			status: this.feedbackState,
@@ -190,6 +206,11 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.setFeedbackState('in_progress')
 
 		try {
+			// Check if module is ready for use
+			if (!this.isReadyForUse()) {
+				throw new Error('api.video API key is required. Please configure the module first.')
+			}
+
 			// Validate restream configuration
 			const restreamValidation = this.validateRestreamConfig(this.config)
 			if (!restreamValidation.valid) {

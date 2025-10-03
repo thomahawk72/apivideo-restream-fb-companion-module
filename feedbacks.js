@@ -53,10 +53,9 @@ module.exports = function (self) {
 			},
 			options: [],
 			callback: () => {
-				// Check if all required config is present based on enabled destinations
+				// Check if module is ready for use (has API key)
 				return (
-					self.config &&
-					self.validateConfig(self.config) &&
+					self.isReadyForUse() &&
 					self.feedbackState !== 'in_progress'
 				)
 			},
