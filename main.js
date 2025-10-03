@@ -28,18 +28,8 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.log('info', 'Initializing Facebook & Youtube api.video restream module')
 		this.log('info', `Config received: ${JSON.stringify(config)}`)
 
-		// Validate configuration
-		this.log('info', 'Calling validateConfig...')
-		const configValid = this.validateConfig(config)
-		this.log('info', `validateConfig result: ${configValid}`)
-		
-		if (!configValid) {
-			this.log('error', 'Configuration validation failed - setting BadConfig status')
-			this.updateStatus(InstanceStatus.BadConfig, 'Missing required configuration')
-			return
-		}
-
-		this.log('info', 'Configuration valid - proceeding with initialization')
+		// Always initialize - no validation blocking
+		this.log('info', 'Proceeding with initialization regardless of config state')
 
 		// Initialize actions, feedbacks, and variables
 		this.updateActions()
@@ -53,7 +43,10 @@ class FacebookApiVideoInstance extends InstanceBase {
 	}
 
 	async destroy() {
-		this.log('debug', 'Module destroyed')
+		this.log('info', '=== MODULE DESTROY START ===')
+		this.log('info', 'Module being destroyed - this might indicate a problem')
+		this.log('info', `Current config when destroying: ${JSON.stringify(this.config)}`)
+		this.log('info', '=== MODULE DESTROY END ===')
 	}
 
 	async configUpdated(config) {
@@ -62,18 +55,8 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.log('info', 'Configuration updated')
 		this.log('info', `New config: ${JSON.stringify(config)}`)
 
-		// Validate new configuration
-		this.log('info', 'Calling validateConfig in configUpdated...')
-		const configValid = this.validateConfig(config)
-		this.log('info', `validateConfig result in configUpdated: ${configValid}`)
-		
-		if (!configValid) {
-			this.log('error', 'Configuration validation failed in configUpdated - setting BadConfig status')
-			this.updateStatus(InstanceStatus.BadConfig, 'Missing required configuration')
-			return
-		}
-
-		this.log('info', 'Configuration valid in configUpdated - proceeding')
+		// Always update - no validation blocking
+		this.log('info', 'Proceeding with config update regardless of validation')
 
 		// Update actions and feedbacks with new config
 		this.updateActions()
