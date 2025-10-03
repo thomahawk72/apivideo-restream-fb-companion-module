@@ -9,7 +9,7 @@ module.exports = function (self) {
 					id: 'info',
 					width: 12,
 					label: 'Action Information',
-					value: 'This action will:\n1. Create Facebook/Youtube Live Video(s) based on enabled destinations\n2. Create a new api.video live stream with those destinations\n3. Stream name will be auto-generated as "Live - dd.mmmm.yy"\n\nMake sure you have configured the required credentials for enabled destinations.',
+					value: 'This action will:\n1. Create a new api.video live stream with auto-generated name "Live - dd.mmmm.yy"\n2. Optionally create Facebook/Youtube Live Video(s) if destinations are enabled\n3. Provide RTMP URL and Stream Key via variables for use in streaming software\n\nAt minimum, you only need api.video API key configured. Restream destinations are optional.',
 				},
 				{
 					type: 'textinput',

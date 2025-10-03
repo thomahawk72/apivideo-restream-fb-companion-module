@@ -1,7 +1,7 @@
 {
-  "name": "companion-module-facebook-apivideo",
+  "name": "companion-module-apivideo",
   "version": "1.0.0",
-  "description": "Bitfocus Companion module for Facebook Live, Youtube Live and api.video integration",
+  "description": "Bitfocus Companion module for api.video integration",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

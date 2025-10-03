@@ -22,8 +22,16 @@ This module automates the process of setting up live restreams to Facebook and/o
 
 ## Actions
 
-- **Prepare Live Stream**: Creates a new api.video live stream (named "Live - dd.mmmm.yy") and adds Facebook/Youtube restream destinations based on enabled options.
+- **Prepare Live Stream**: Creates a new api.video live stream (named "Live - dd.mmmm.yy") and optionally adds Facebook/Youtube restream destinations based on enabled options. Provides RTMP URL and Stream Key via variables.
 - **Reset Status**: Resets the module's status.
+
+## Getting Stream Details
+
+After creating a stream, get your details using:
+- **RTMP URL**: `$(internal:variable:rtmp_url)`
+- **Stream Key**: `$(internal:variable:stream_key)`
+
+Use these in your streaming software (OBS, etc.) to start broadcasting.
 
 ## Feedbacks
 

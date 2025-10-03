@@ -18,6 +18,8 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.lastFacebookVideoId = ''
 		this.lastYoutubeVideoId = ''
 		this.lastLiveStreamId = ''
+		this.lastRtmpUrl = ''
+		this.lastStreamKey = ''
 	}
 
 	async init(config) {
@@ -72,14 +74,24 @@ class FacebookApiVideoInstance extends InstanceBase {
 			return false
 		}
 
+		return true
+	}
+
+	/**
+	 * Validate configuration for restream operations
+	 * This is called when preparing live stream, not for basic config saving
+	 */
+	validateRestreamConfig(config) {
 		// Check if at least one restream destination is enabled
 		const fbEnabled = config.enable_facebook_restream
 		const ytEnabled = config.enable_youtube_restream
 
 		if (!fbEnabled && !ytEnabled) {
-			this.log('warn', 'At least one restream destination must be enabled')
-			return false
+			// No restream destinations enabled - this is OK, just create stream without restreams
+			return { valid: true, restreams: [] }
 		}
+
+		const restreams = []
 
 		// Validate Facebook configuration if enabled
 		if (fbEnabled) {
@@ -87,9 +99,10 @@ class FacebookApiVideoInstance extends InstanceBase {
 			for (const field of fbRequired) {
 				if (!config[field] || config[field].trim() === '') {
 					this.log('warn', `Missing required Facebook configuration field: ${field}`)
-					return false
+					return { valid: false, error: `Missing required Facebook configuration: ${field}` }
 				}
 			}
+			restreams.push('facebook')
 		}
 
 		// Validate Youtube configuration if enabled
@@ -98,12 +111,13 @@ class FacebookApiVideoInstance extends InstanceBase {
 			for (const field of ytRequired) {
 				if (!config[field] || config[field].trim() === '') {
 					this.log('warn', `Missing required Youtube configuration field: ${field}`)
-					return false
+					return { valid: false, error: `Missing required Youtube configuration: ${field}` }
 				}
 			}
+			restreams.push('youtube')
 		}
 
-		return true
+		return { valid: true, restreams }
 	}
 
 	/**
@@ -162,6 +176,8 @@ class FacebookApiVideoInstance extends InstanceBase {
 			facebook_video_id: this.lastFacebookVideoId,
 			youtube_video_id: this.lastYoutubeVideoId,
 			livestream_id: this.lastLiveStreamId,
+			rtmp_url: this.lastRtmpUrl,
+			stream_key: this.lastStreamKey,
 			module_ready: isReady ? 'true' : 'false',
 		})
 	}
@@ -170,10 +186,16 @@ class FacebookApiVideoInstance extends InstanceBase {
 	 * Execute the prepare live action
 	 */
 	async executePrepareLife(title = 'Live Stream', description = 'Automated live stream setup') {
-		this.log('info', 'Starting restream preparation...')
+		this.log('info', 'Starting live stream preparation...')
 		this.setFeedbackState('in_progress')
 
 		try {
+			// Validate restream configuration
+			const restreamValidation = this.validateRestreamConfig(this.config)
+			if (!restreamValidation.valid) {
+				throw new Error(restreamValidation.error)
+			}
+
 			const restreams = []
 
 			// Step 1: Prepare Facebook restream if enabled
@@ -211,7 +233,7 @@ class FacebookApiVideoInstance extends InstanceBase {
 				this.log('info', 'Youtube restream destination added')
 			}
 
-			// Step 3: Create new api.video live stream with restreams
+			// Step 3: Create new api.video live stream with restreams (if any)
 			const streamName = this.api.generateStreamName()
 			this.log('info', `Creating new api.video live stream: ${streamName}`)
 			
@@ -222,16 +244,23 @@ class FacebookApiVideoInstance extends InstanceBase {
 			)
 
 			this.lastLiveStreamId = liveStream.id
+			this.lastRtmpUrl = liveStream.rtmpUrl
+			this.lastStreamKey = liveStream.streamKey
 			this.log('info', `Live stream created successfully: ${liveStream.id}`)
 			this.log('info', `RTMP URL: ${liveStream.rtmpUrl}`)
 			this.log('info', `Stream Key: ${liveStream.streamKey}`)
 
-			const destNames = restreams.map(r => r.name).join(', ')
-			this.log('info', `Restream preparation completed successfully. Destinations: ${destNames}`)
+			if (restreams.length > 0) {
+				const destNames = restreams.map(r => r.name).join(', ')
+				this.log('info', `Live stream created with restream destinations: ${destNames}`)
+			} else {
+				this.log('info', 'Live stream created without restream destinations')
+			}
+
 			this.setFeedbackState('ok')
 
 		} catch (error) {
-			this.log('error', `Restream preparation failed: ${error.message}`)
+			this.log('error', `Live stream preparation failed: ${error.message}`)
 			this.setFeedbackState('fail', error.message)
 		}
 	}

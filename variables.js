@@ -26,6 +26,16 @@ module.exports = function (self) {
 			description: 'ID of the last created api.video live stream',
 		},
 		{
+			name: 'RTMP URL',
+			variableId: 'rtmp_url',
+			description: 'RTMP URL for the last created live stream (use this in your streaming software)',
+		},
+		{
+			name: 'Stream Key',
+			variableId: 'stream_key',
+			description: 'Stream key for the last created live stream (use this in your streaming software)',
+		},
+		{
 			name: 'Module Ready',
 			variableId: 'module_ready',
 			description: 'Whether the module is properly configured and ready (true/false)',
