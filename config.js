@@ -21,8 +21,8 @@ module.exports = function (self) {
 			id: 'apivideo_api_key',
 			label: 'api.video API Key',
 			width: 12,
-			required: true,
-			tooltip: 'Your api.video API key (found in your api.video dashboard)',
+			required: false,
+			tooltip: 'Your api.video API key (found in your api.video dashboard). Required for creating streams.',
 		},
 		{
 			type: 'static-text',

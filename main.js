@@ -24,13 +24,22 @@ class FacebookApiVideoInstance extends InstanceBase {
 
 	async init(config) {
 		this.config = config
+		this.log('info', '=== INIT START ===')
 		this.log('info', 'Initializing Facebook & Youtube api.video restream module')
+		this.log('info', `Config received: ${JSON.stringify(config)}`)
 
 		// Validate configuration
-		if (!this.validateConfig(config)) {
+		this.log('info', 'Calling validateConfig...')
+		const configValid = this.validateConfig(config)
+		this.log('info', `validateConfig result: ${configValid}`)
+		
+		if (!configValid) {
+			this.log('error', 'Configuration validation failed - setting BadConfig status')
 			this.updateStatus(InstanceStatus.BadConfig, 'Missing required configuration')
 			return
 		}
+
+		this.log('info', 'Configuration valid - proceeding with initialization')
 
 		// Initialize actions, feedbacks, and variables
 		this.updateActions()
@@ -40,6 +49,7 @@ class FacebookApiVideoInstance extends InstanceBase {
 
 		this.updateStatus(InstanceStatus.Ok)
 		this.log('info', 'Module initialized successfully')
+		this.log('info', '=== INIT END ===')
 	}
 
 	async destroy() {
@@ -47,14 +57,23 @@ class FacebookApiVideoInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
+		this.log('info', '=== CONFIG UPDATED START ===')
 		this.config = config
 		this.log('info', 'Configuration updated')
+		this.log('info', `New config: ${JSON.stringify(config)}`)
 
 		// Validate new configuration
-		if (!this.validateConfig(config)) {
+		this.log('info', 'Calling validateConfig in configUpdated...')
+		const configValid = this.validateConfig(config)
+		this.log('info', `validateConfig result in configUpdated: ${configValid}`)
+		
+		if (!configValid) {
+			this.log('error', 'Configuration validation failed in configUpdated - setting BadConfig status')
 			this.updateStatus(InstanceStatus.BadConfig, 'Missing required configuration')
 			return
 		}
+
+		this.log('info', 'Configuration valid in configUpdated - proceeding')
 
 		// Update actions and feedbacks with new config
 		this.updateActions()
@@ -62,6 +81,7 @@ class FacebookApiVideoInstance extends InstanceBase {
 		this.updateVariableValues()
 
 		this.updateStatus(InstanceStatus.Ok)
+		this.log('info', '=== CONFIG UPDATED END ===')
 	}
 
 	/**
@@ -69,18 +89,32 @@ class FacebookApiVideoInstance extends InstanceBase {
 	 * This is called during initialization - be lenient for empty configs
 	 */
 	validateConfig(config) {
+		this.log('info', '=== VALIDATE CONFIG START ===')
+		this.log('info', `Config object: ${JSON.stringify(config)}`)
+		this.log('info', `Config type: ${typeof config}`)
+		this.log('info', `Config is null: ${config === null}`)
+		this.log('info', `Config is undefined: ${config === undefined}`)
+		
 		// If no config at all, that's OK during initial setup
 		if (!config) {
+			this.log('info', 'No config provided - returning true')
 			return true
 		}
+
+		this.log('info', `apivideo_api_key exists: ${config.hasOwnProperty('apivideo_api_key')}`)
+		this.log('info', `apivideo_api_key value: "${config.apivideo_api_key}"`)
+		this.log('info', `apivideo_api_key type: ${typeof config.apivideo_api_key}`)
 
 		// If config exists but no api key, that's also OK during initial setup
 		// The api key will be required when actually using the module
 		if (!config.apivideo_api_key || config.apivideo_api_key.trim() === '') {
-			this.log('debug', 'api.video API key not configured yet - module ready for configuration')
+			this.log('info', 'api.video API key not configured yet - module ready for configuration')
+			this.log('info', '=== VALIDATE CONFIG END (true) ===')
 			return true
 		}
 
+		this.log('info', 'api.video API key is configured')
+		this.log('info', '=== VALIDATE CONFIG END (true) ===')
 		return true
 	}
 
