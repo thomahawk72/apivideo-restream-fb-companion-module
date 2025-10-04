@@ -50,6 +50,8 @@ class ApiClient {
 				payload.restreams = restreams
 			}
 
+			this.log('info', `api.video payload: ${JSON.stringify(payload, null, 2)}`)
+
 			const response = await got.post('https://ws.api.video/live-streams', {
 				headers: {
 					'Authorization': `Bearer ${apiKey}`,

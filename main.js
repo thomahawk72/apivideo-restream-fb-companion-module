@@ -274,6 +274,7 @@ class FacebookApiVideoInstance extends InstanceBase {
 			// Step 3: Create new api.video live stream with restreams (if any)
 			const streamName = this.api.generateStreamName()
 			this.log('info', `Creating new api.video live stream: ${streamName}`)
+			this.log('info', `Restreams payload: ${JSON.stringify(restreams, null, 2)}`)
 			
 			const liveStream = await this.api.createApiVideoLiveStream(
 				this.config.apivideo_api_key,
