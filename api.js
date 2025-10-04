@@ -278,8 +278,11 @@ class ApiClient {
 				// Parse RTMP URL to get server and key
 				const rtmpMatch = streamUrl.match(/^(rtmps?:\/\/[^\/]+\/)(.+)$/)
 				if (rtmpMatch) {
-					const serverUrl = rtmpMatch[1]
+					const baseServerUrl = rtmpMatch[1]
 					const fullKey = rtmpMatch[2]
+					
+					// For Facebook: serverUrl should include 'rtmp' suffix (no trailing slash)
+					const serverUrl = baseServerUrl + 'rtmp'
 					
 					// For Facebook: keep the full key verbatim (including query parameters)
 					// Remove 'rtmp/' prefix but keep everything else
@@ -289,6 +292,7 @@ class ApiClient {
 						key = fullKey.replace('rtmp/', '')
 					}
 
+					this.log('info', `Facebook RTMP parsing: baseServerUrl="${baseServerUrl}" + "rtmp" = "${serverUrl}"`)
 					this.log('info', `Facebook RTMP parsing: fullKey="${fullKey}" -> verbatim key="${key}"`)
 					this.log('info', `Successfully created Facebook Live Video: ${response.body.id}`)
 					return {
