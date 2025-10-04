@@ -279,8 +279,16 @@ class ApiClient {
 				const rtmpMatch = streamUrl.match(/^(rtmps?:\/\/[^\/]+\/)(.+)$/)
 				if (rtmpMatch) {
 					const serverUrl = rtmpMatch[1]
-					const key = rtmpMatch[2]
+					const fullKey = rtmpMatch[2]
+					
+					// Extract clean stream key from Facebook RTMP path (remove rtmp/ prefix and query parameters)
+					let key = fullKey
+					if (fullKey.startsWith('rtmp/')) {
+						// Remove 'rtmp/' prefix and everything after '?' (query parameters)
+						key = fullKey.replace('rtmp/', '').split('?')[0]
+					}
 
+					this.log('info', `Facebook RTMP parsing: fullKey="${fullKey}" -> clean key="${key}"`)
 					this.log('info', `Successfully created Facebook Live Video: ${response.body.id}`)
 					return {
 						id: response.body.id,
